@@ -1,10 +1,12 @@
 # Document Ingestion Pipeline
 
-A document ingestion pipeline built using FastAPI and MongoDB Atlas.
+A document ingestion pipeline built using FastAPI and MongoDB Atlas for document registration, file uploads, text extraction, and future vector database ingestion.
+
+---
 
 ## Current Progress
 
-### Completed
+### Completed Features
 
 - FastAPI Setup
 - Project Structure Setup
@@ -13,6 +15,8 @@ A document ingestion pipeline built using FastAPI and MongoDB Atlas.
 - Database Connectivity Test API
 - Document Registry API
 - Unique Document ID Generation
+- PDF Upload API
+- Local File Storage
 - Swagger Documentation
 
 ---
@@ -31,6 +35,7 @@ document-ingestion-pipeline/
 │   └── storage/
 │
 ├── raw/
+│
 ├── .env
 ├── .gitignore
 ├── requirements.txt
@@ -58,7 +63,7 @@ Response:
 
 ---
 
-### Database Test
+### Database Connectivity Test
 
 ```http
 GET /db-test
@@ -93,16 +98,16 @@ Response:
 
 ```json
 {
-    "doc_id": "DOC-a1b2c3d4",
+    "doc_id": "DOC-d0d1a8f0",
     "status": "NOT_STARTED"
 }
 ```
 
-Document stored in MongoDB:
+MongoDB Record:
 
 ```json
 {
-    "doc_id": "DOC-a1b2c3d4",
+    "doc_id": "DOC-d0d1a8f0",
     "document_name": "Army Recruitment",
     "description": "Recruitment Notification",
     "status": "NOT_STARTED",
@@ -113,8 +118,47 @@ Document stored in MongoDB:
 
 ---
 
+### Upload PDF
+
+```http
+POST /documents/{doc_id}/upload
+```
+
+Example:
+
+```http
+POST /documents/DOC-d0d1a8f0/upload
+```
+
+Response:
+
+```json
+{
+    "message": "PDF uploaded successfully",
+    "document_path": "raw/DOC-d0d1a8f0_sample.pdf"
+}
+```
+
+Result:
+
+```text
+raw/
+└── DOC-d0d1a8f0_sample.pdf
+```
+
+MongoDB Update:
+
+```json
+{
+    "document_path": "raw/DOC-d0d1a8f0_sample.pdf"
+}
+```
+
+---
+
 ## Technologies Used
 
+- Python
 - FastAPI
 - Uvicorn
 - MongoDB Atlas
@@ -124,21 +168,27 @@ Document stored in MongoDB:
 
 ---
 
-## Run Project
+## Running the Project
 
-Activate virtual environment:
+### Activate Virtual Environment
 
 ```powershell
 .\venv\Scripts\activate
 ```
 
-Run server:
+### Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### Run FastAPI
 
 ```bash
 uvicorn main:app --reload
 ```
 
-Open Swagger:
+### Swagger Documentation
 
 ```text
 http://127.0.0.1:8000/docs
@@ -146,12 +196,62 @@ http://127.0.0.1:8000/docs
 
 ---
 
-## Next Step
+## Current Architecture
 
-Implement PDF Upload API:
+```text
+User
+ │
+ ▼
+FastAPI
+ │
+ ▼
+MongoDB Atlas
+ │
+ ▼
+Document Metadata Storage
 
-```http
-POST /documents/{doc_id}/upload
+User
+ │
+ ▼
+FastAPI
+ │
+ ▼
+Local Storage (raw/)
+ │
+ ▼
+PDF Files
 ```
 
-Upload a PDF file, store it in the backend `raw/` folder, and update the document record with the file path.
+---
+
+## Next Step
+
+### Trigger Ingestion API
+
+```http
+POST /documents/{doc_id}/ingest
+```
+
+Planned Flow:
+
+```text
+DOC_ID
+   ↓
+Find MongoDB Record
+   ↓
+Load PDF from raw/
+   ↓
+Extract Text
+   ↓
+Store extracted_text in MongoDB
+   ↓
+Update Status
+```
+
+Status Values:
+
+```text
+NOT_STARTED
+IN_PROGRESS
+COMPLETED
+```
