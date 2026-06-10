@@ -1,25 +1,25 @@
 # Document Ingestion Pipeline
 
-Learning and building a production-style document ingestion pipeline using FastAPI, MongoDB, and Vector Databases.
+Document ingestion pipeline built using FastAPI and MongoDB Atlas.
 
----
+## Current Progress
 
-## Milestone 1 - Project Setup
+### Completed
 
-Completed:
-
-- Project structure setup
-- FastAPI installation
-- Virtual environment setup
+- FastAPI Setup
+- Project Structure Setup
 - Health Check API
+- MongoDB Atlas Integration
+- Database Connectivity Test
 - Swagger Documentation
 
 ---
 
-## Folder Structure
+## Project Structure
 
+```text
 document-ingestion-pipeline/
-│
+
 ├── src/
 │   ├── api/
 │   ├── database/
@@ -29,26 +29,44 @@ document-ingestion-pipeline/
 │   └── storage/
 │
 ├── raw/
-│
 ├── .env
 ├── .gitignore
 ├── requirements.txt
 ├── README.md
 └── main.py
+```
 
 ---
 
-## Health Check API
+## Available APIs
 
-Endpoint:
+### Health Check
 
+```http
 GET /health
+```
 
 Response:
 
+```json
 {
     "status": "healthy"
 }
+```
+
+### Database Test
+
+```http
+GET /db-test
+```
+
+Response:
+
+```json
+{
+    "message": "MongoDB Connected Successfully"
+}
+```
 
 ---
 
@@ -56,24 +74,28 @@ Response:
 
 Activate virtual environment:
 
-Windows:
-
+```powershell
 .\venv\Scripts\activate
+```
 
 Start server:
 
+```bash
 uvicorn main:app --reload
+```
 
 Swagger:
 
+```text
 http://127.0.0.1:8000/docs
+```
 
 ---
 
-## Next Milestone
+## Next Step
 
-Document Registry API
+Implement Document Registry API:
 
+```http
 POST /documents
-
-This API will create a document record in MongoDB and generate a unique document ID.
+```
