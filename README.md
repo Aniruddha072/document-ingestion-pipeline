@@ -10,6 +10,7 @@ A FastAPI-based document ingestion pipeline that registers documents, uploads PD
 * MongoDB Atlas Integration
 * FAISS Vector Indexing
 * Document Status Tracking
+* Ingestion Metadata Tracking
 * Swagger API Documentation
 
 ---
@@ -69,6 +70,8 @@ Register Document
         ↓
 Upload PDF
         ↓
+Store PDF in storage/raw
+        ↓
 Extract Text
         ↓
 Store Metadata in MongoDB
@@ -77,9 +80,11 @@ Chunk Text
         ↓
 Generate Embeddings
         ↓
-Store in FAISS Vector Database
+Create FAISS Vector Index
         ↓
-Check Document Status
+Update Document Status
+        ↓
+Retrieve Document Status
 ```
 
 ---
@@ -94,8 +99,6 @@ GET /health
 
 Checks whether the FastAPI application is running.
 
----
-
 ### MongoDB Connection Test
 
 ```http
@@ -103,8 +106,6 @@ GET /db-test
 ```
 
 Verifies connectivity with MongoDB Atlas.
-
----
 
 ### Register Document
 
@@ -118,8 +119,7 @@ Creates a document entry in MongoDB with:
 * Document Name
 * Description
 * Status (`NOT_STARTED`)
-
----
+* Creation Timestamp
 
 ### Upload PDF
 
@@ -133,9 +133,7 @@ Uploads a PDF file and stores it in:
 storage/raw/
 ```
 
-The document record is updated with the file path.
-
----
+Updates the document record with the PDF path.
 
 ### Trigger Ingestion
 
@@ -150,9 +148,14 @@ Performs:
 3. Text Chunking
 4. Embedding Generation
 5. FAISS Index Creation
-6. MongoDB Update
+6. MongoDB Metadata Update
 
----
+Stores:
+
+* Extracted Text
+* Chunk Count
+* Ingestion Timestamp
+* Status (`COMPLETED`)
 
 ### Get Document Status
 
@@ -160,13 +163,33 @@ Performs:
 GET /documents/{doc_id}/status
 ```
 
-Returns:
+Example Response:
 
 ```json
 {
   "doc_id": "DOC-d0d1a8f0",
   "document_name": "Army Recruitment",
   "status": "COMPLETED"
+}
+```
+
+---
+
+## Document Metadata Stored in MongoDB
+
+Example document:
+
+```json
+{
+  "doc_id": "DOC-d0d1a8f0",
+  "document_name": "Army Recruitment",
+  "description": "Recruitment Notification",
+  "status": "COMPLETED",
+  "document_path": "storage/raw/DOC-d0d1a8f0_sample.pdf",
+  "extracted_text": "...",
+  "chunk_count": 12,
+  "created_at": "...",
+  "ingested_at": "..."
 }
 ```
 
@@ -193,7 +216,7 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Run the application:
+Run the server:
 
 ```bash
 uvicorn main:app --reload
@@ -217,13 +240,21 @@ Use Swagger UI to test all APIs interactively.
 
 Completed:
 
-* Document Registration
-* PDF Upload
+* FastAPI Project Setup
+* MongoDB Atlas Integration
+* Document Registry API
+* PDF Upload API
+* PDF Storage Management
 * PDF Text Extraction
-* MongoDB Storage
+* Text Chunking
 * Embedding Generation
 * FAISS Vector Indexing
-* Document Status Tracking
-* Swagger API Documentation
+* Document Status API
+* Ingestion Metadata Tracking
+* Swagger Documentation
 
-This project demonstrates a complete document ingestion workflow that can serve as the foundation for Retrieval-Augmented Generation (RAG) and enterprise document processing systems.
+## Version
+
+**v1.0 - Complete Document Ingestion Pipeline**
+
+This project implements a complete document ingestion workflow that can serve as the foundation for Retrieval-Augmented Generation (RAG), enterprise search systems, and document processing platforms.

@@ -8,6 +8,8 @@ from src.chunking.text_splitter import split_documents
 from src.embeddings.embedding_model import get_embedding_model
 from src.vectorstore.faiss_manager import create_vectorstore
 
+from datetime import datetime
+
 
 def ingest_document(doc_id):
 
@@ -49,6 +51,8 @@ def ingest_document(doc_id):
         documents
     )
 
+    chunk_count = len(chunks)
+
     embedding_model = (
         get_embedding_model()
     )
@@ -64,7 +68,9 @@ def ingest_document(doc_id):
         {
             "$set": {
                 "extracted_text": extracted_text,
-                "status": "COMPLETED"
+                "status": "COMPLETED",
+                "chunk_count": chunk_count,
+                "ingested_at": datetime.utcnow()
             }
         }
     )

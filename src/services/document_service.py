@@ -1,6 +1,6 @@
 from src.database.mongodb import documents_collection
 import uuid
-
+from datetime import datetime
 
 def create_document(document_data):
 
@@ -12,7 +12,8 @@ def create_document(document_data):
         "description": document_data.description,
         "status": "NOT_STARTED",
         "document_path": None,
-        "extracted_text": None
+        "extracted_text": None,
+        "created_at": datetime.utcnow()
     }
 
     documents_collection.insert_one(document)
