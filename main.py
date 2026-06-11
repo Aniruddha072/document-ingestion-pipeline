@@ -5,6 +5,7 @@ from src.api.test_db import router as db_router
 from src.api.documents import router as documents_router
 from src.api.upload import router as upload_router
 from src.api.ingestion import router as ingestion_router
+from src.api.status import router as status_router
 
 
 app = FastAPI(
@@ -16,3 +17,4 @@ app.include_router(db_router)
 app.include_router(documents_router)
 app.include_router(upload_router)
 app.include_router(ingestion_router)
+app.include_router(status_router)
