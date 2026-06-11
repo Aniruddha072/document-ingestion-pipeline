@@ -1,51 +1,59 @@
 # Document Ingestion Pipeline
 
-A document ingestion pipeline built using FastAPI and MongoDB Atlas for document registration, PDF uploads, text extraction, and future vector database ingestion.
+A FastAPI-based document ingestion pipeline that registers documents, uploads PDFs, extracts text, stores metadata in MongoDB Atlas, and generates FAISS vector indexes for future semantic search and retrieval.
 
----
+## Features
 
-## Completed Features
-
-- FastAPI Setup
-- MongoDB Atlas Integration
-- Health Check API
-- Database Connectivity Test API
-- Document Registry API
-- Unique Document ID Generation
-- PDF Upload API
-- Local File Storage
-- PDF Text Extraction
-- Document Ingestion API
-- Status Tracking
-- Swagger Documentation
-
----
+* Document Registration API
+* PDF Upload API
+* MongoDB Atlas Integration
+* PDF Text Extraction
+* FAISS Vector Index Creation
+* Document Status Tracking
+* Swagger API Documentation
 
 ## Project Structure
 
 ```text
 document-ingestion-pipeline/
-
+│
 ├── src/
 │   ├── api/
+│   ├── chunking/
 │   ├── database/
-│   ├── models/
+│   ├── embeddings/
 │   ├── schemas/
 │   ├── services/
-│   └── storage/
+│   └── vectorstore/
 │
-├── raw/
+├── storage/
+│   ├── raw/
+│   └── vectorstore/
 │
 ├── .env
 ├── .gitignore
+├── main.py
 ├── requirements.txt
-├── README.md
-└── main.py
+└── README.md
 ```
 
----
+## Workflow
 
-## Available APIs
+```text
+Register Document
+        ↓
+Upload PDF
+        ↓
+Extract Text
+        ↓
+Store Metadata in MongoDB
+        ↓
+Generate Embeddings
+        ↓
+Store in FAISS Vector Database
+```
+
+## APIs
 
 ### Health Check
 
@@ -53,47 +61,17 @@ document-ingestion-pipeline/
 GET /health
 ```
 
-Checks whether the API is running.
-
----
-
-### Database Connectivity Test
+### Test MongoDB Connection
 
 ```http
 GET /db-test
 ```
 
-Verifies MongoDB Atlas connectivity.
-
----
-
-### Create Document Registry
+### Register Document
 
 ```http
 POST /documents
 ```
-
-Creates a document record in MongoDB.
-
-Request:
-
-```json
-{
-  "document_name": "Army Recruitment",
-  "description": "Recruitment Notification"
-}
-```
-
-Response:
-
-```json
-{
-  "doc_id": "DOC-d0d1a8f0",
-  "status": "NOT_STARTED"
-}
-```
-
----
 
 ### Upload PDF
 
@@ -101,143 +79,30 @@ Response:
 POST /documents/{doc_id}/upload
 ```
 
-Uploads a PDF and stores it in the backend `raw/` folder.
-
-Response:
-
-```json
-{
-  "message": "PDF uploaded successfully",
-  "document_path": "raw/DOC-d0d1a8f0_sample.pdf"
-}
-```
-
----
-
 ### Trigger Ingestion
 
 ```http
 POST /documents/{doc_id}/ingest
 ```
 
-Loads the uploaded PDF, extracts text, stores the extracted text in MongoDB, and updates document status.
+## Tech Stack
 
-Response:
+* FastAPI
+* MongoDB Atlas
+* PyMongo
+* PyPDF
+* LangChain
+* Sentence Transformers
+* FAISS
 
-```json
-{
-  "message": "Document ingested successfully"
-}
-```
-
----
-
-## Document Lifecycle
-
-```text
-Create Document
-       ↓
-Upload PDF
-       ↓
-Store PDF Path
-       ↓
-Trigger Ingestion
-       ↓
-Read PDF
-       ↓
-Extract Text
-       ↓
-Store Text in MongoDB
-       ↓
-Status = COMPLETED
-```
-
----
-
-## MongoDB Document Structure
-
-```json
-{
-  "doc_id": "DOC-d0d1a8f0",
-  "document_name": "Army Recruitment",
-  "description": "Recruitment Notification",
-  "status": "COMPLETED",
-  "document_path": "raw/DOC-d0d1a8f0_sample.pdf",
-  "extracted_text": "..."
-}
-```
-
----
-
-## Technologies Used
-
-- Python
-- FastAPI
-- MongoDB Atlas
-- PyMongo
-- Pydantic
-- PyPDF
-- Uvicorn
-- Python Dotenv
-
----
-
-## Running the Project
-
-Activate virtual environment:
-
-```powershell
-.\venv\Scripts\activate
-```
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Run FastAPI:
+## Run Project
 
 ```bash
 uvicorn main:app --reload
 ```
 
-Open Swagger:
+Swagger Documentation:
 
 ```text
 http://127.0.0.1:8000/docs
-```
-
----
-
-## Current Status
-
-✅ Document Registry
-
-✅ PDF Upload
-
-✅ Text Extraction
-
-✅ MongoDB Storage
-
-✅ Status Tracking
-
----
-
-## Next Milestone
-
-### Vector Database Integration
-
-Planned Flow:
-
-```text
-PDF
- ↓
-Extract Text
- ↓
-Chunk Text
- ↓
-Generate Embeddings
- ↓
-Store in Vector Database (FAISS)
 ```
