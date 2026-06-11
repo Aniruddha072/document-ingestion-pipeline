@@ -1,22 +1,22 @@
 # Document Ingestion Pipeline
 
-A document ingestion pipeline built using FastAPI and MongoDB Atlas for document registration, file uploads, text extraction, and future vector database ingestion.
+A document ingestion pipeline built using FastAPI and MongoDB Atlas for document registration, PDF uploads, text extraction, and future vector database ingestion.
 
 ---
 
-## Current Progress
-
-### Completed Features
+## Completed Features
 
 - FastAPI Setup
-- Project Structure Setup
-- Health Check API
 - MongoDB Atlas Integration
+- Health Check API
 - Database Connectivity Test API
 - Document Registry API
 - Unique Document ID Generation
 - PDF Upload API
 - Local File Storage
+- PDF Text Extraction
+- Document Ingestion API
+- Status Tracking
 - Swagger Documentation
 
 ---
@@ -53,13 +53,7 @@ document-ingestion-pipeline/
 GET /health
 ```
 
-Response:
-
-```json
-{
-    "status": "healthy"
-}
-```
+Checks whether the API is running.
 
 ---
 
@@ -69,13 +63,7 @@ Response:
 GET /db-test
 ```
 
-Response:
-
-```json
-{
-    "message": "MongoDB Connected Successfully"
-}
-```
+Verifies MongoDB Atlas connectivity.
 
 ---
 
@@ -85,12 +73,14 @@ Response:
 POST /documents
 ```
 
+Creates a document record in MongoDB.
+
 Request:
 
 ```json
 {
-    "document_name": "Army Recruitment",
-    "description": "Recruitment Notification"
+  "document_name": "Army Recruitment",
+  "description": "Recruitment Notification"
 }
 ```
 
@@ -98,21 +88,8 @@ Response:
 
 ```json
 {
-    "doc_id": "DOC-d0d1a8f0",
-    "status": "NOT_STARTED"
-}
-```
-
-MongoDB Record:
-
-```json
-{
-    "doc_id": "DOC-d0d1a8f0",
-    "document_name": "Army Recruitment",
-    "description": "Recruitment Notification",
-    "status": "NOT_STARTED",
-    "document_path": null,
-    "extracted_text": null
+  "doc_id": "DOC-d0d1a8f0",
+  "status": "NOT_STARTED"
 }
 ```
 
@@ -124,33 +101,69 @@ MongoDB Record:
 POST /documents/{doc_id}/upload
 ```
 
-Example:
-
-```http
-POST /documents/DOC-d0d1a8f0/upload
-```
+Uploads a PDF and stores it in the backend `raw/` folder.
 
 Response:
 
 ```json
 {
-    "message": "PDF uploaded successfully",
-    "document_path": "raw/DOC-d0d1a8f0_sample.pdf"
+  "message": "PDF uploaded successfully",
+  "document_path": "raw/DOC-d0d1a8f0_sample.pdf"
 }
 ```
 
-Result:
+---
 
-```text
-raw/
-└── DOC-d0d1a8f0_sample.pdf
+### Trigger Ingestion
+
+```http
+POST /documents/{doc_id}/ingest
 ```
 
-MongoDB Update:
+Loads the uploaded PDF, extracts text, stores the extracted text in MongoDB, and updates document status.
+
+Response:
 
 ```json
 {
-    "document_path": "raw/DOC-d0d1a8f0_sample.pdf"
+  "message": "Document ingested successfully"
+}
+```
+
+---
+
+## Document Lifecycle
+
+```text
+Create Document
+       ↓
+Upload PDF
+       ↓
+Store PDF Path
+       ↓
+Trigger Ingestion
+       ↓
+Read PDF
+       ↓
+Extract Text
+       ↓
+Store Text in MongoDB
+       ↓
+Status = COMPLETED
+```
+
+---
+
+## MongoDB Document Structure
+
+```json
+{
+  "doc_id": "DOC-d0d1a8f0",
+  "document_name": "Army Recruitment",
+  "description": "Recruitment Notification",
+  "status": "COMPLETED",
+  "document_path": "raw/DOC-d0d1a8f0_sample.pdf",
+  "extracted_text": "..."
 }
 ```
 
@@ -160,35 +173,36 @@ MongoDB Update:
 
 - Python
 - FastAPI
-- Uvicorn
 - MongoDB Atlas
 - PyMongo
 - Pydantic
+- PyPDF
+- Uvicorn
 - Python Dotenv
 
 ---
 
 ## Running the Project
 
-### Activate Virtual Environment
+Activate virtual environment:
 
 ```powershell
 .\venv\Scripts\activate
 ```
 
-### Install Dependencies
+Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Run FastAPI
+Run FastAPI:
 
 ```bash
 uvicorn main:app --reload
 ```
 
-### Swagger Documentation
+Open Swagger:
 
 ```text
 http://127.0.0.1:8000/docs
@@ -196,62 +210,34 @@ http://127.0.0.1:8000/docs
 
 ---
 
-## Current Architecture
+## Current Status
 
-```text
-User
- │
- ▼
-FastAPI
- │
- ▼
-MongoDB Atlas
- │
- ▼
-Document Metadata Storage
+✅ Document Registry
 
-User
- │
- ▼
-FastAPI
- │
- ▼
-Local Storage (raw/)
- │
- ▼
-PDF Files
-```
+✅ PDF Upload
+
+✅ Text Extraction
+
+✅ MongoDB Storage
+
+✅ Status Tracking
 
 ---
 
-## Next Step
+## Next Milestone
 
-### Trigger Ingestion API
-
-```http
-POST /documents/{doc_id}/ingest
-```
+### Vector Database Integration
 
 Planned Flow:
 
 ```text
-DOC_ID
-   ↓
-Find MongoDB Record
-   ↓
-Load PDF from raw/
-   ↓
+PDF
+ ↓
 Extract Text
-   ↓
-Store extracted_text in MongoDB
-   ↓
-Update Status
-```
-
-Status Values:
-
-```text
-NOT_STARTED
-IN_PROGRESS
-COMPLETED
+ ↓
+Chunk Text
+ ↓
+Generate Embeddings
+ ↓
+Store in Vector Database (FAISS)
 ```
