@@ -11,12 +11,31 @@ from datetime import datetime
 
 
 def ingest_document(doc_id: str) -> dict[str, str]:
+    """
+    Process an uploaded PDF document.
+
+    The document is loaded from storage, text is extracted,
+    split into chunks, converted into embeddings, and stored
+    in a FAISS vector database. The document status is then
+    updated in MongoDB.
+
+    Args:
+        doc_id: Unique document identifier.
+
+    Returns:
+        dict: Ingestion result message or error details.
+    """
 
     collection = get_documents_collection()
 
-    document = collection.find_one(
-        {"doc_id": doc_id}
-    )
+    try:
+        document = collection.find_one(
+            {"doc_id": doc_id}
+        )
+    except Exception as error:
+        return {
+            "error": f"Failed to fetch document: {error}"
+        }
 
     if not document:
         return {
@@ -32,15 +51,25 @@ def ingest_document(doc_id: str) -> dict[str, str]:
             "error": "No PDF uploaded"
         }
 
-    reader = PdfReader(pdf_path)
+    try:
+        reader = PdfReader(pdf_path)
+    except Exception as error:
+        return {
+            "error": f"Failed to read PDF: {error}"
+        }
 
     extracted_text = ""
 
     for page in reader.pages:
 
-        extracted_text += (
-            page.extract_text() + "\n"
-        )
+        try:
+            page_text = page.extract_text() or ""
+        except Exception as error:
+            return {
+                "error": f"Failed to extract text from PDF: {error}"
+            }
+
+        extracted_text += page_text + "\n"
 
     documents = [
         Document(
@@ -54,27 +83,42 @@ def ingest_document(doc_id: str) -> dict[str, str]:
 
     chunk_count = len(chunks)
 
-    embedding_model = (
-        get_embedding_model()
-    )
-
-    create_vectorstore(
-        chunks,
-        embedding_model,
-        doc_id
-    )
-
-    collection.update_one(
-        {"doc_id": doc_id},
-        {
-            "$set": {
-                "extracted_text": extracted_text,
-                "status": "COMPLETED",
-                "chunk_count": chunk_count,
-                "ingested_at": datetime.utcnow()
-            }
+    try:
+        embedding_model = (
+            get_embedding_model()
+        )
+    except Exception as error:
+        return {
+            "error": f"Failed to load embedding model: {error}"
         }
-    )
+
+    try:
+        create_vectorstore(
+            chunks,
+            embedding_model,
+            doc_id
+        )
+    except Exception as error:
+        return {
+            "error": f"Failed to create vector store: {error}"
+        }
+
+    try:
+        collection.update_one(
+            {"doc_id": doc_id},
+            {
+                "$set": {
+                    "extracted_text": extracted_text,
+                    "status": "COMPLETED",
+                    "chunk_count": chunk_count,
+                    "ingested_at": datetime.utcnow()
+                }
+            }
+        )
+    except Exception as error:
+        return {
+            "error": f"Failed to update document status: {error}"
+        }
 
     return {
         "message": "Document ingested successfully"

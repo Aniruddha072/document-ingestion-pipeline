@@ -11,7 +11,17 @@ router = APIRouter()
 def upload_document(
     doc_id: str,
     file: UploadFile = File(...)
-):
+) -> dict[str, str]:
+    """
+    Upload a PDF file for a document.
+
+    Args:
+        doc_id: Unique document identifier.
+        file: Uploaded PDF file.
+
+    Returns:
+        dict: Upload result and file information.
+    """
 
     return upload_pdf(
         doc_id,

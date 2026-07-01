@@ -12,7 +12,16 @@ router = APIRouter()
 )
 def trigger_ingestion(
     doc_id: str
-):
+) -> dict[str, str]:
+    """
+    Trigger document ingestion and processing.
+
+    Args:
+        doc_id: Unique document identifier.
+
+    Returns:
+        dict: Ingestion result.
+    """
 
     return ingest_document(
         doc_id

@@ -1,8 +1,20 @@
 from src.database.mongodb import get_documents_collection
+from src.schemas.document_schema import DocumentCreate
 import uuid
 from datetime import datetime
 
-def create_document(document_data):
+def create_document(
+    document_data: DocumentCreate
+) -> dict[str, str]:
+    """
+    Create a new document record in MongoDB.
+
+    Args:
+        document_data: Document metadata received from the request.
+
+    Returns:
+        dict: Document ID and initial status.
+    """
 
     collection = get_documents_collection()
 
@@ -18,7 +30,12 @@ def create_document(document_data):
         "created_at": datetime.utcnow()
     }
 
-    collection.insert_one(document)
+    try:
+        collection.insert_one(document)
+    except Exception as error:
+        return{
+            "error": f"Failed to create document: {error}"
+        }
 
     return {
         "doc_id": doc_id,

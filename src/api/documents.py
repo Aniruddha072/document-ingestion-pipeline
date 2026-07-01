@@ -7,6 +7,17 @@ router = APIRouter()
 
 
 @router.post("/documents")
-def register_document(document: DocumentCreate):
+def register_document(
+    document: DocumentCreate
+) -> dict[str, str]:
+    """
+    Register a new document in the system.
+
+    Args:
+        document: Document metadata supplied by the user.
+
+    Returns:
+        dict: Created document information.
+    """
 
     return create_document(document)
