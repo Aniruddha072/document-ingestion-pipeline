@@ -1,13 +1,31 @@
 from pymongo import MongoClient
-from dotenv import load_dotenv
-import os
+from pymongo.database import Database
+from pymongo.collection import Collection
 
-load_dotenv()
+from config.settings import settings
 
-MONGODB_URI = os.getenv("MONGODB_URI")
 
-client = MongoClient(MONGODB_URI)
+def get_database() -> Database:
+    """
+    Create and return MongoDB database instance.
+    """
 
-db = client["document_ingestion"]
+    client = MongoClient(
+        settings.mongo_uri
+    )
 
-documents_collection = db["documents"]
+    return client[
+        settings.mongo_database
+    ]
+
+
+def get_documents_collection() -> Collection:
+    """
+    Return documents collection.
+    """
+
+    database = get_database()
+
+    return database[
+        settings.mongo_collection
+    ]

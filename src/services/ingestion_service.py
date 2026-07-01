@@ -1,8 +1,7 @@
 from pypdf import PdfReader
 
 from langchain_core.documents import Document
-
-from src.database.mongodb import documents_collection
+from src.database.mongodb import get_documents_collection
 
 from src.chunking.text_splitter import split_documents
 from src.embeddings.embedding_model import get_embedding_model
@@ -11,9 +10,11 @@ from src.vectorstore.faiss_manager import create_vectorstore
 from datetime import datetime
 
 
-def ingest_document(doc_id):
+def ingest_document(doc_id: str) -> dict[str, str]:
 
-    document = documents_collection.find_one(
+    collection = get_documents_collection()
+
+    document = collection.find_one(
         {"doc_id": doc_id}
     )
 
@@ -63,7 +64,7 @@ def ingest_document(doc_id):
         doc_id
     )
 
-    documents_collection.update_one(
+    collection.update_one(
         {"doc_id": doc_id},
         {
             "$set": {
@@ -78,3 +79,5 @@ def ingest_document(doc_id):
     return {
         "message": "Document ingested successfully"
     }
+
+    

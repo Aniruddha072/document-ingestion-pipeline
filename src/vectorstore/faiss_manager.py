@@ -13,7 +13,9 @@ def create_vectorstore(
     )
 
     vectorstore.save_local(
-        f"vectorstore/{doc_id}"
+        f"storage/vectorstore/{doc_id}"
     )
 
     return vectorstore
+
+    

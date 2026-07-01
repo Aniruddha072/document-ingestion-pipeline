@@ -1,9 +1,11 @@
-from src.database.mongodb import documents_collection
+from src.database.mongodb import get_documents_collection
 
 
 def get_document_status(doc_id):
 
-    document = documents_collection.find_one(
+    collection = get_documents_collection()
+
+    document = collection.find_one(
         {"doc_id": doc_id}
     )
 

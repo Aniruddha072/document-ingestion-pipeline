@@ -1,8 +1,10 @@
-from src.database.mongodb import documents_collection
+from src.database.mongodb import get_documents_collection
 import uuid
 from datetime import datetime
 
 def create_document(document_data):
+
+    collection = get_documents_collection()
 
     doc_id = f"DOC-{uuid.uuid4().hex[:8]}"
 
@@ -16,7 +18,7 @@ def create_document(document_data):
         "created_at": datetime.utcnow()
     }
 
-    documents_collection.insert_one(document)
+    collection.insert_one(document)
 
     return {
         "doc_id": doc_id,
