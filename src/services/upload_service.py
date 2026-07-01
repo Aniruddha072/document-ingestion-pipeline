@@ -1,5 +1,6 @@
 import os
 from src.database.mongodb import get_documents_collection
+from config.settings import settings
 
 
 def upload_pdf(doc_id, file):
@@ -15,7 +16,7 @@ def upload_pdf(doc_id, file):
             "error": "Document not found"
         }
 
-    file_path = f"storage/raw/{doc_id}_{file.filename}"
+    file_path = (f"{settings.raw_storage_path}/{doc_id}_{file.filename}")
 
     with open(file_path, "wb") as buffer:
         buffer.write(file.file.read())

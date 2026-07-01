@@ -1,3 +1,4 @@
+from config.settings import settings
 from langchain_community.vectorstores import FAISS
 
 
@@ -13,7 +14,7 @@ def create_vectorstore(
     )
 
     vectorstore.save_local(
-        f"storage/vectorstore/{doc_id}"
+        f"{settings.vectorstore_path}/{doc_id}"
     )
 
     return vectorstore
