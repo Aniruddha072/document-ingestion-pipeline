@@ -1,7 +1,7 @@
 from pypdf import PdfReader
 
 
-def extract_text_from_pdf(
+def extract_text(
     pdf_path: str
 ) -> str:
     """
