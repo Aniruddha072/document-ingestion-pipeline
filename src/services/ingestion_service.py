@@ -1,12 +1,10 @@
-from pypdf import PdfReader
-
 from langchain_core.documents import Document
 from src.database.mongodb import get_documents_collection
 
 from src.chunking.text_splitter import split_documents
 from src.embeddings.embedding_model import get_embedding_model
 from src.vectorstore.faiss_manager import create_vectorstore
-
+from src.extraction.pdf_extractor import extract_text_from_pdf
 from datetime import datetime
 
 
@@ -52,24 +50,17 @@ def ingest_document(doc_id: str) -> dict[str, str]:
         }
 
     try:
-        reader = PdfReader(pdf_path)
+        extracted_text = (
+            extract_text_from_pdf(
+                pdf_path
+            )
+        )
     except Exception as error:
         return {
-            "error": f"Failed to read PDF: {error}"
+            "error": (
+                f"Failed to extract text: {error}"
+            )
         }
-
-    extracted_text = ""
-
-    for page in reader.pages:
-
-        try:
-            page_text = page.extract_text() or ""
-        except Exception as error:
-            return {
-                "error": f"Failed to extract text from PDF: {error}"
-            }
-
-        extracted_text += page_text + "\n"
 
     documents = [
         Document(
