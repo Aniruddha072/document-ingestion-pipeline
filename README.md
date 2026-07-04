@@ -1,17 +1,22 @@
 # Document Ingestion Pipeline
 
-A FastAPI-based document ingestion pipeline that registers documents, uploads PDFs, extracts text, stores metadata in MongoDB Atlas, generates embeddings, and creates FAISS vector indexes for semantic search and retrieval.
+A FastAPI-based document ingestion service that extracts text from documents, generates embeddings, and stores vector representations using FAISS for downstream retrieval and AI applications.
 
 ## Features
 
-* Document Registration API
-* PDF Upload API
-* PDF Text Extraction
-* MongoDB Atlas Integration
-* FAISS Vector Indexing
-* Document Status Tracking
-* Ingestion Metadata Tracking
-* Swagger API Documentation
+- Document registration and tracking
+- File upload and storage
+- Multi-format document extraction
+  - PDF
+  - TXT
+  - DOCX
+- Automatic extractor selection using a factory pattern
+- Document chunking using LangChain
+- Embedding generation using HuggingFace models
+- FAISS vector store creation
+- MongoDB metadata storage
+- Error handling and validation
+- Configurable settings using environment variables
 
 ---
 
@@ -19,6 +24,9 @@ A FastAPI-based document ingestion pipeline that registers documents, uploads PD
 
 ```text
 document-ingestion-pipeline/
+│
+├── config/
+│   └── settings.py
 │
 ├── src/
 │   ├── api/
@@ -29,17 +37,23 @@ document-ingestion-pipeline/
 │   │   ├── health.py
 │   │   └── test_db.py
 │   │
+│   ├── database/
+│   │   └── mongodb.py
+│   │
+│   ├── extraction/
+│   │   ├── extractor_factory.py
+│   │   ├── pdf_extractor.py
+│   │   ├── txt_extractor.py
+│   │   └── docx_extractor.py
+│   │
 │   ├── chunking/
 │   │   └── text_splitter.py
 │   │
 │   ├── embeddings/
 │   │   └── embedding_model.py
 │   │
-│   ├── database/
-│   │   └── mongodb.py
-│   │
-│   ├── schemas/
-│   │   └── document_schema.py
+│   ├── vectorstore/
+│   │   └── faiss_manager.py
 │   │
 │   ├── services/
 │   │   ├── document_service.py
@@ -47,15 +61,14 @@ document-ingestion-pipeline/
 │   │   ├── ingestion_service.py
 │   │   └── status_service.py
 │   │
-│   └── vectorstore/
-│       └── faiss_manager.py
+│   └── schemas/
+│       └── document_schema.py
 │
 ├── storage/
 │   ├── raw/
 │   └── vectorstore/
 │
 ├── .env
-├── .gitignore
 ├── main.py
 ├── requirements.txt
 └── README.md
@@ -63,152 +76,92 @@ document-ingestion-pipeline/
 
 ---
 
-## Workflow
+## Supported File Types
+
+| Format | Supported |
+|----------|----------|
+| PDF | Yes |
+| TXT | Yes |
+| DOCX | Yes |
+
+---
+
+## Processing Flow
 
 ```text
-Register Document
-        ↓
-Upload PDF
-        ↓
-Store PDF in storage/raw
-        ↓
-Extract Text
-        ↓
-Store Metadata in MongoDB
-        ↓
-Chunk Text
-        ↓
-Generate Embeddings
-        ↓
-Create FAISS Vector Index
-        ↓
-Update Document Status
-        ↓
-Retrieve Document Status
+Document Upload
+        │
+        ▼
+Document Storage
+        │
+        ▼
+Extractor Factory
+        │
+ ┌──────┼──────┐
+ │      │      │
+ ▼      ▼      ▼
+PDF    TXT    DOCX
+ │      │      │
+ └──────┴──────┘
+        │
+        ▼
+Text Extraction
+        │
+        ▼
+Chunking
+        │
+        ▼
+Embeddings
+        │
+        ▼
+FAISS Vector Store
+        │
+        ▼
+Metadata Update
 ```
 
 ---
 
-## Available APIs
+## Environment Variables
 
-### Health Check
+Create a `.env` file:
 
-```http
-GET /health
-```
+```env
+mongo_uri=YOUR_MONGODB_URI
+mongo_database=document_ingestion
+mongo_collection=documents
 
-Checks whether the FastAPI application is running.
+chunk_size=500
+chunk_overlap=50
 
-### MongoDB Connection Test
+embedding_model=sentence-transformers/all-MiniLM-L6-v2
 
-```http
-GET /db-test
-```
-
-Verifies connectivity with MongoDB Atlas.
-
-### Register Document
-
-```http
-POST /documents
-```
-
-Creates a document entry in MongoDB with:
-
-* Document ID
-* Document Name
-* Description
-* Status (`NOT_STARTED`)
-* Creation Timestamp
-
-### Upload PDF
-
-```http
-POST /documents/{doc_id}/upload
-```
-
-Uploads a PDF file and stores it in:
-
-```text
-storage/raw/
-```
-
-Updates the document record with the PDF path.
-
-### Trigger Ingestion
-
-```http
-POST /documents/{doc_id}/ingest
-```
-
-Performs:
-
-1. PDF Loading
-2. Text Extraction
-3. Text Chunking
-4. Embedding Generation
-5. FAISS Index Creation
-6. MongoDB Metadata Update
-
-Stores:
-
-* Extracted Text
-* Chunk Count
-* Ingestion Timestamp
-* Status (`COMPLETED`)
-
-### Get Document Status
-
-```http
-GET /documents/{doc_id}/status
-```
-
-Example Response:
-
-```json
-{
-  "doc_id": "DOC-d0d1a8f0",
-  "document_name": "Army Recruitment",
-  "status": "COMPLETED"
-}
+raw_storage_path=storage/raw
+vectorstore_path=storage/vectorstore
 ```
 
 ---
 
-## Document Metadata Stored in MongoDB
+## Installation
 
-Example document:
+Clone the repository:
 
-```json
-{
-  "doc_id": "DOC-d0d1a8f0",
-  "document_name": "Army Recruitment",
-  "description": "Recruitment Notification",
-  "status": "COMPLETED",
-  "document_path": "storage/raw/DOC-d0d1a8f0_sample.pdf",
-  "extracted_text": "...",
-  "chunk_count": 12,
-  "created_at": "...",
-  "ingested_at": "..."
-}
+```bash
+git clone <repository-url>
+cd document-ingestion-pipeline
 ```
 
----
+Create and activate a virtual environment:
 
-## Technologies Used
+```bash
+python -m venv venv
+```
 
-* FastAPI
-* MongoDB Atlas
-* PyMongo
-* PyPDF
-* LangChain
-* Sentence Transformers
-* FAISS
-* Python Dotenv
+Windows:
 
----
-
-## Running the Application
+```bash
+.\venv\Scripts\activate
+```
 
 Install dependencies:
 
@@ -216,45 +169,97 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Run the server:
+---
+
+## Run the Application
 
 ```bash
 uvicorn main:app --reload
 ```
 
----
-
-## Swagger Documentation
-
-After starting the server:
+Swagger UI:
 
 ```text
 http://127.0.0.1:8000/docs
 ```
 
-Use Swagger UI to test all APIs interactively.
+---
+
+## Available Endpoints
+
+### Create Document
+
+```http
+POST /documents
+```
+
+Creates a document record.
 
 ---
 
-## Current Status
+### Upload Document
 
-Completed:
+```http
+POST /documents/{doc_id}/upload
+```
 
-* FastAPI Project Setup
-* MongoDB Atlas Integration
-* Document Registry API
-* PDF Upload API
-* PDF Storage Management
-* PDF Text Extraction
-* Text Chunking
-* Embedding Generation
-* FAISS Vector Indexing
-* Document Status API
-* Ingestion Metadata Tracking
-* Swagger Documentation
+Uploads a supported document.
 
-## Version
+---
 
-**v1.0 - Complete Document Ingestion Pipeline**
+### Trigger Ingestion
 
-This project implements a complete document ingestion workflow that can serve as the foundation for Retrieval-Augmented Generation (RAG), enterprise search systems, and document processing platforms.
+```http
+POST /documents/{doc_id}/ingest
+```
+
+Extracts text, creates chunks, generates embeddings, and stores vectors.
+
+---
+
+### Get Document Status
+
+```http
+GET /documents/{doc_id}/status
+```
+
+Returns ingestion status and metadata.
+
+---
+
+### Health Check
+
+```http
+GET /health
+```
+
+---
+
+### MongoDB Connectivity Check
+
+```http
+GET /db-test
+```
+
+---
+
+## Current Capabilities
+
+- Multi-format document extraction
+- Configurable chunking
+- Embedding generation
+- Vector store persistence
+- MongoDB metadata management
+- Factory-based extraction architecture
+- Error handling and validation
+- Type hints and docstrings
+
+---
+
+## Next Steps
+
+- Metadata extraction
+- Additional file format support
+- OCR support for scanned documents
+- Retrieval pipeline
+- Search APIs
