@@ -6,6 +6,11 @@ from src.embeddings.embedding_model import get_embedding_model
 from src.vectorstore.faiss_manager import create_vectorstore
 from src.extraction.extractor_factory import extract_text
 from datetime import datetime
+from metadata.metadata_extractor import (
+    extract_file_metadata,
+    extract_content_metadata
+)
+from config.settings import settings
 
 
 def ingest_document(doc_id: str) -> dict[str, str]:
@@ -62,6 +67,18 @@ def ingest_document(doc_id: str) -> dict[str, str]:
             )
         }
 
+    file_metadata = (
+        extract_file_metadata(
+            document_path
+        )
+    )
+
+    content_metadata = (
+        extract_content_metadata(
+            extracted_text
+        )
+    )
+
     documents = [
         Document(
             page_content=extracted_text
@@ -100,9 +117,14 @@ def ingest_document(doc_id: str) -> dict[str, str]:
             {
                 "$set": {
                     "extracted_text": extracted_text,
-                    "status": "COMPLETED",
-                    "chunk_count": chunk_count,
-                    "ingested_at": datetime.utcnow()
+                    "file_metadata": file_metadata,
+                    "content_metadata": content_metadata,
+                    "processing_metadata": {
+                        "chunk_count": chunk_count,
+                        "embedding_model":settings.embedding_model,
+                        "ingested_at":datetime.utcnow()
+                    },
+                    "status": "COMPLETED"
                 }
             }
         )
