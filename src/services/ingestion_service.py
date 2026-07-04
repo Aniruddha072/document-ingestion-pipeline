@@ -4,7 +4,7 @@ from src.database.mongodb import get_documents_collection
 from src.chunking.text_splitter import split_documents
 from src.embeddings.embedding_model import get_embedding_model
 from src.vectorstore.faiss_manager import create_vectorstore
-from src.extraction.pdf_extractor import extract_text_from_pdf
+from src.extraction.extractor_factory import extract_text
 from datetime import datetime
 
 
@@ -40,19 +40,19 @@ def ingest_document(doc_id: str) -> dict[str, str]:
             "error": "Document not found"
         }
 
-    pdf_path = document.get(
+    document_path = document.get(
         "document_path"
     )
 
-    if not pdf_path:
+    if not document_path:
         return {
-            "error": "No PDF uploaded"
+            "error": "No document uploaded"
         }
 
     try:
         extracted_text = (
-            extract_text_from_pdf(
-                pdf_path
+            extract_text(
+                document_path
             )
         )
     except Exception as error:

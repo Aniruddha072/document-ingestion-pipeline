@@ -3,8 +3,13 @@ from src.database.mongodb import get_documents_collection
 from config.settings import settings
 from fastapi import UploadFile
 
+SUPPORTED_EXTENSIONS = {
+    ".pdf",
+    ".txt",
+    ".docx"
+}
 
-def upload_pdf(
+def upload_document(
     doc_id: str,
     file: UploadFile
 ) -> dict[str, str]:
@@ -30,7 +35,21 @@ def upload_pdf(
             "error": "Document not found"
         }
 
-    file_path = (f"{settings.raw_storage_path}/{doc_id}_{file.filename}")
+    file_extension = os.path.splitext(
+        file.filename
+    )[1].lower()
+
+    if file_extension not in SUPPORTED_EXTENSIONS:
+        return {
+            "error": (
+                f"Unsupported file type: "
+                f"{file_extension}"
+            )
+        }
+
+    file_path = (
+        f"{settings.raw_storage_path}/{doc_id}_{file.filename}"
+    )
 
     try:
         with open(file_path, "wb") as buffer:
@@ -55,6 +74,6 @@ def upload_pdf(
         }
 
     return {
-        "message": "PDF uploaded successfully",
+        "message": "Document uploaded successfully",
         "document_path": file_path
     }
