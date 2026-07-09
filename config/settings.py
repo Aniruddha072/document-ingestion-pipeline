@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     vectorstore_path: str
     raw_storage_path: str
 
+    max_file_size_mb: int = 20
+    
     class Config:
         env_file = ".env"
 

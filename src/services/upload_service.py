@@ -2,6 +2,11 @@ import os
 from src.database.mongodb import get_documents_collection
 from config.settings import settings
 from fastapi import UploadFile
+from src.validation.document_validator import validate_document
+from src.validation.duplicate_detector import (
+    generate_document_hash,
+    check_duplicate_hash
+)
 
 SUPPORTED_EXTENSIONS = {
     ".pdf",
@@ -60,11 +65,38 @@ def upload_document(
         }
 
     try:
+        validate_document(file_path)
+    except ValueError as error:
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+            except Exception:
+                pass
+        return {
+            "error": str(error)
+        }
+
+    document_hash = generate_document_hash(file_path)
+
+    try:
+        check_duplicate_hash(document_hash, collection)
+    except ValueError as error:
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+            except Exception:
+                pass
+        return {
+            "error": str(error)
+        }
+
+    try:
         collection.update_one(
             {"doc_id": doc_id},
             {
                 "$set": {
-                    "document_path": file_path
+                    "document_path": file_path,
+                    "document_hash": document_hash
                 }
             }
         )
