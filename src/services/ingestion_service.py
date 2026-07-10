@@ -54,6 +54,21 @@ def ingest_document(doc_id: str) -> dict[str, str]:
             "error": "No document uploaded"
         }
 
+    # Update document status to PROCESSING
+    try:
+        collection.update_one(
+            {"doc_id": doc_id},
+            {
+                "$set": {
+                    "status": "PROCESSING",
+                }
+            }
+        )
+    except Exception as error:
+        return {
+            "error": f"Failed to update document status: {error}"
+        }
+
     try:
         extracted_text = (
             extract_text(
@@ -61,10 +76,19 @@ def ingest_document(doc_id: str) -> dict[str, str]:
             )
         )
     except Exception as error:
+
+        collection.update_one(
+            {"doc_id": doc_id},
+            {
+                "$set": {
+                    "status": "FAILED",
+                    "error_message": str(error)
+                }
+            }
+        )
+
         return {
-            "error": (
-                f"Failed to extract text: {error}"
-            )
+            "error": f"Failed to extract text: {error}"
         }
 
     file_metadata = (
@@ -97,6 +121,16 @@ def ingest_document(doc_id: str) -> dict[str, str]:
             get_embedding_model()
         )
     except Exception as error:
+
+        collection.update_one(
+            {"doc_id": doc_id},
+            {
+                "$set": {
+                    "status": "FAILED"
+                }
+            }
+        )
+
         return {
             "error": f"Failed to load embedding model: {error}"
         }
@@ -108,6 +142,16 @@ def ingest_document(doc_id: str) -> dict[str, str]:
             doc_id
         )
     except Exception as error:
+
+        collection.update_one(
+            {"doc_id": doc_id},
+            {
+                "$set": {
+                    "status": "FAILED"
+                }
+            }
+        )
+
         return {
             "error": f"Failed to create vector store: {error}"
         }
