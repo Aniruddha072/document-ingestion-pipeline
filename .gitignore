@@ -5,3 +5,8 @@ __pycache__/
 
 storage/vectorstore/
 storage/raw/
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
