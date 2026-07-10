@@ -75,7 +75,8 @@ def ingest_document(doc_id: str) -> dict[str, str]:
 
     content_metadata = (
         extract_content_metadata(
-            extracted_text
+            extracted_text,
+            document_path
         )
     )
 
