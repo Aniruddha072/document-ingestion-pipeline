@@ -1,0 +1,19 @@
+services:
+
+  document-ingestion-pipeline:
+
+    build: .
+
+    container_name: document-ingestion-pipeline
+
+    ports:
+      - "8000:8000"
+
+    env_file:
+      - .env
+
+    volumes:
+      - ./storage/raw:/app/storage/raw
+      - ./storage/vectorstore:/app/storage/vectorstore
+
+    restart: unless-stopped
