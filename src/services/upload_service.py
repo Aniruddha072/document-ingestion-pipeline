@@ -52,6 +52,11 @@ def upload_document(
             )
         }
 
+    os.makedirs(
+        settings.raw_storage_path,
+        exist_ok=True
+    )
+
     file_path = (
         f"{settings.raw_storage_path}/{doc_id}_{file.filename}"
     )
