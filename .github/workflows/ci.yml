@@ -4,17 +4,28 @@ on:
   push:
     branches:
       - main
-      - develop
 
   pull_request:
     branches:
       - main
-      - develop
 
 jobs:
   test:
 
     runs-on: ubuntu-latest
+
+    env:
+      mongo_uri: ${{ secrets.MONGO_URI }}
+      mongo_database: ${{ secrets.MONGO_DATABASE }}
+      mongo_collection: ${{ secrets.MONGO_COLLECTION }}
+
+      chunk_size: ${{ secrets.CHUNK_SIZE }}
+      chunk_overlap: ${{ secrets.CHUNK_OVERLAP }}
+
+      embedding_model: ${{ secrets.EMBEDDING_MODEL }}
+
+      vectorstore_path: ${{ secrets.VECTORSTORE_PATH }}
+      raw_storage_path: ${{ secrets.RAW_STORAGE_PATH }}
 
     steps:
 
@@ -30,6 +41,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
+      - name: Create Storage Directories
+        run: |
+          mkdir -p storage/raw
+          mkdir -p storage/vectorstore
 
       - name: Run Tests
         run: |
