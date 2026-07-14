@@ -1,39 +1,38 @@
 # Document Ingestion Pipeline
 
-A production-style document ingestion pipeline built with FastAPI that processes uploaded documents, extracts content, generates embeddings, and stores them for downstream Retrieval-Augmented Generation (RAG) applications.
+A production-style document ingestion pipeline built with FastAPI that validates, processes, and stores documents for downstream Retrieval-Augmented Generation (RAG) systems.
 
 ---
 
 ## Overview
 
-This project automates the document ingestion workflow by:
+This project automates the complete document ingestion workflow:
 
-- Registering documents
-- Uploading files
-- Validating document formats
-- Extracting document content
-- Generating metadata
-- Detecting duplicate files
-- Chunking text
-- Creating embeddings
-- Storing vectors in FAISS
-- Persisting document information in MongoDB
-
-The pipeline is designed as a backend service that can be integrated into larger AI and RAG systems.
+- Document Registration
+- File Upload
+- Document Validation
+- Duplicate Detection (SHA-256)
+- Metadata Extraction
+- Multi-format Content Extraction
+- Text Chunking
+- Embedding Generation
+- FAISS Vector Storage
+- MongoDB Persistence
+- Async Background Processing
 
 ---
 
 ## Features
 
 ### Document Management
-- Document registration
-- File upload support
-- Document status tracking
+- Register documents
+- Upload files
+- Track processing status
 
 ### Validation
 - File type validation
 - File size validation
-- Duplicate document detection using SHA-256 hashing
+- SHA-256 duplicate detection
 
 ### Content Processing
 - PDF extraction
@@ -42,46 +41,52 @@ The pipeline is designed as a backend service that can be integrated into larger
 - Metadata generation
 
 ### AI Pipeline
-- Text chunking using LangChain
-- Embedding generation using Sentence Transformers
+- LangChain text chunking
+- Sentence Transformer embeddings
 - FAISS vector storage
 
-### Background Processing
-- Asynchronous ingestion workflow
-- Non-blocking API responses
-
-### Testing
-- Unit tests with Pytest
-- Code coverage reporting
+### Engineering
+- FastAPI backend
+- MongoDB Atlas integration
+- Dockerized deployment
+- GitHub Actions CI/CD
+- Unit & Integration Testing
 
 ---
 
-## Tech Stack
+## Architecture
 
-### Backend
-- FastAPI
-- Uvicorn
-
-### Database
-- MongoDB Atlas
-
-### AI / NLP
-- LangChain
-- Sentence Transformers
-- FAISS
-
-### Utilities
-- PyPDF2
-- python-docx
-- Pydantic
-
-### Testing
-- Pytest
-- Pytest-Cov
-
-### Deployment
-- Docker
-- Docker Compose
+```text
+Client
+   │
+   ▼
+FastAPI API
+   │
+   ├── MongoDB Atlas
+   │
+   ├── Raw File Storage
+   │
+   ▼
+Validation
+   │
+   ▼
+Duplicate Detection
+   │
+   ▼
+Content Extraction
+   │
+   ▼
+Metadata Generation
+   │
+   ▼
+Chunking
+   │
+   ▼
+Embeddings
+   │
+   ▼
+FAISS Vector Store
+```
 
 ---
 
@@ -93,11 +98,17 @@ document-ingestion-pipeline/
 ├── src/
 │   ├── api/
 │   ├── services/
+│   ├── extraction/
+│   ├── chunking/
+│   ├── embeddings/
+│   ├── vectorstore/
+│   ├── validation/
 │   ├── database/
-│   ├── models/
-│   └── utils/
+│   └── schemas/
 │
 ├── tests/
+│   ├── integration/
+│   └── unit tests
 │
 ├── storage/
 │   ├── raw/
@@ -105,10 +116,12 @@ document-ingestion-pipeline/
 │
 ├── config/
 │
-├── main.py
-├── requirements.txt
+├── .github/workflows/
+│
 ├── Dockerfile
-└── docker-compose.yml
+├── docker-compose.yml
+├── requirements.txt
+└── main.py
 ```
 
 ---
@@ -119,64 +132,51 @@ document-ingestion-pipeline/
 Register Document
         │
         ▼
-Upload File
+Upload Document
         │
         ▼
-Validation
+Validate File
         │
         ▼
 Duplicate Detection
         │
         ▼
-Content Extraction
+Store Raw File
         │
         ▼
-Metadata Generation
+Trigger Ingestion
         │
         ▼
-Chunking
+Extract Content
         │
         ▼
-Embedding Generation
+Generate Metadata
         │
         ▼
-FAISS Storage
+Chunk Text
         │
         ▼
-MongoDB Update
+Generate Embeddings
+        │
+        ▼
+Store in FAISS
+        │
+        ▼
+Update MongoDB Status
 ```
 
 ---
 
 ## API Endpoints
 
-### Register Document
-
-```http
-POST /documents
-```
-
-Creates a new document record.
-
----
-
-### Upload Document
-
-```http
-POST /documents/{document_id}/upload
-```
-
-Uploads a document and triggers ingestion.
-
----
-
-### Get Document Status
-
-```http
-GET /documents/{document_id}
-```
-
-Returns current processing status and metadata.
+| Method | Endpoint | Description |
+|----------|----------|-------------|
+| POST | `/documents` | Register a document |
+| POST | `/documents/{doc_id}/upload` | Upload a file |
+| POST | `/documents/{doc_id}/ingest` | Trigger ingestion |
+| GET | `/documents/{doc_id}/status` | Get processing status |
+| GET | `/health` | Health check |
+| GET | `/db-test` | MongoDB connectivity check |
 
 ---
 
@@ -195,15 +195,13 @@ cd document-ingestion-pipeline
 python -m venv venv
 ```
 
-Activate:
-
 Windows:
 
 ```bash
 venv\Scripts\activate
 ```
 
-Linux / Mac:
+Linux/macOS:
 
 ```bash
 source venv/bin/activate
@@ -215,14 +213,22 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Configure Environment
+### Configure Environment Variables
 
 Create a `.env` file:
 
 ```env
-MONGODB_URI=<your_mongodb_connection_string>
-DATABASE_NAME=document_ingestion
-COLLECTION_NAME=documents
+mongo_uri=YOUR_MONGODB_URI
+mongo_database=document_ingestion
+mongo_collection=documents
+
+chunk_size=500
+chunk_overlap=50
+
+embedding_model=sentence-transformers/all-MiniLM-L6-v2
+
+vectorstore_path=storage/vectorstore
+raw_storage_path=storage/raw
 ```
 
 ### Run Application
@@ -239,7 +245,7 @@ http://localhost:8000/docs
 
 ---
 
-## Docker Deployment
+## Docker
 
 Build image:
 
@@ -281,37 +287,91 @@ Generate coverage report:
 pytest --cov=src --cov-report=term-missing
 ```
 
-Current Results:
+### Results
 
 ```text
-20 passed
-57% coverage
+25 Tests Passed
+0 Failed
+84% Coverage
 ```
 
 ---
 
-## Completed Milestones
+## CI/CD
 
-- Document Registration API
-- File Upload API
-- Validation Pipeline
-- Metadata Extraction
-- Duplicate Detection
-- Multi-format Content Extraction
-- Chunking Pipeline
-- Embedding Generation
-- FAISS Integration
-- MongoDB Integration
-- Async Background Processing
-- Unit Testing
-- Dockerization
+GitHub Actions automatically runs on:
+
+- Push to `main`
+- Pull Requests to `main`
+
+Pipeline stages:
+
+```text
+Checkout Repository
+        │
+        ▼
+Setup Python
+        │
+        ▼
+Install Dependencies
+        │
+        ▼
+Run Tests
+        │
+        ▼
+Generate Coverage
+```
+
+Repository secrets are used to securely provide MongoDB and application configuration during workflow execution.
 
 ---
 
-## Upcoming Work
+## Technology Stack
 
-- Integration Testing
-- CI/CD Pipeline
+### Backend
+- FastAPI
+- Uvicorn
+
+### Database
+- MongoDB Atlas
+
+### AI / NLP
+- LangChain
+- Sentence Transformers
+
+### Vector Store
+- FAISS
+
+### Testing
+- Pytest
+- Pytest-Cov
+
+### DevOps
+- Docker
+- Docker Compose
+- GitHub Actions
+
+---
+
+## Project Status
+
+| Component | Status |
+|------------|----------|
+| Document Registration API | ✅ |
+| File Upload API | ✅ |
+| Validation Pipeline | ✅ |
+| Duplicate Detection | ✅ |
+| Metadata Extraction | ✅ |
+| Multi-format Extraction | ✅ |
+| Chunking Pipeline | ✅ |
+| Embedding Generation | ✅ |
+| FAISS Integration | ✅ |
+| MongoDB Integration | ✅ |
+| Async Background Processing | ✅ |
+| Unit Testing | ✅ |
+| Integration Testing | ✅ |
+| Dockerization | ✅ |
+| CI/CD Pipeline | ✅ |
 
 ---
 
@@ -319,8 +379,6 @@ Current Results:
 
 **Aniruddha More**
 
-GitHub:
-https://github.com/Aniruddha072
+GitHub: https://github.com/Aniruddha072
 
-LinkedIn:
-https://www.linkedin.com/in/aniruddha-more-376660328/
+LinkedIn: https://www.linkedin.com/in/aniruddha-more-376660328/
